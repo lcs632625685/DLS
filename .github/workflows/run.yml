@@ -1,0 +1,19 @@
+name: Durex Sign
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # 北京时间每天8点自动运行
+
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+      - env:
+          DLS: ${{ secrets.DLS }}
+          SCKEY: ${{ secrets.SCKEY }}  # 这里加上了SCKEY声明
+        run: python sign.py
