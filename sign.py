@@ -58,7 +58,7 @@ def get_draw_chance(token):
     """获取抽奖次数"""
     url = "https://vip.ixiliu.cn/mp/activity.lottery.getUserInfoV2"
     headers = get_headers(token)
-    params = {"snId": "468512040523264"}
+    params = {"snId": "484074368284932"}
     try:
         res = requests.get(url, headers=headers, params=params)
         if res.status_code == 200:
