@@ -78,7 +78,7 @@ def lottery(token):
     
     url = "https://vip.ixiliu.cn/mp/activity.lottery/draw"
     headers = get_headers(token)
-    params = {"snId": "468512040523264", "channelSn": "0"}
+    params = {"snId": "484074368284932", "channelSn": "0"}
     try:
         res = requests.get(url, headers=headers, params=params)
         if res.status_code == 200:
