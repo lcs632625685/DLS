@@ -58,7 +58,7 @@ def get_draw_chance(token):
     """获取抽奖次数"""
     url = "https://vip.ixiliu.cn/mp/activity.lottery.getUserInfoV2"
     headers = get_headers(token)
-    params = {"snId": "484074368284932"}
+    params = {"snId": "478725928739072"}
     try:
         res = requests.get(url, headers=headers, params=params)
         if res.status_code == 200:
@@ -78,7 +78,7 @@ def lottery(token):
     
     url = "https://vip.ixiliu.cn/mp/activity.lottery/draw"
     headers = get_headers(token)
-    params = {"snId": "484074368284932", "channelSn": "0"}
+    params = {"snId": "478725928739072", "channelSn": "0"}
     try:
         res = requests.get(url, headers=headers, params=params)
         if res.status_code == 200:
