@@ -6,7 +6,6 @@ import json
 DLS = os.getenv("DLS")
 SCKEY = os.getenv("SCKEY")
 
-# 调试打印
 print(f"DEBUG: SCKEY 变量值 = {SCKEY}")
 print(f"DEBUG: DLS 变量值 = {DLS[:10] if DLS else 'None'}...")
 
@@ -57,45 +56,105 @@ def sign_in(token):
     except Exception as e:
         return f"❌ 签到请求异常: {str(e)}"
 
+def test_draw_api_paths(token):
+    """测试不同的抽奖接口路径"""
+    headers = get_headers(token)
+    params = {"snId": "468512040523264"}
+    
+    # 可能的路径列表（按可能性排序）
+    paths = [
+        "/mp/lottery/getUserInfoV2",
+        "/mp/activity/lottery/getUserInfoV2",
+        "/mp/lottery/getUserInfo",
+        "/mp/activity/lottery/getUserInfo",
+        "/mp/lottery/userInfo",
+        "/mp/activity.lottery/userInfo",
+        "/mp/lottery/info",
+        "/mp/activity/lottery/info",
+        "/mp/lottery/getDrawTimes",
+        "/mp/lottery/drawTimes",
+        "/mp/user/lotteryInfo",
+        "/mp/activity/lotteryInfo",
+    ]
+    
+    print("\n🔍 ===== 开始探测抽奖接口路径 =====")
+    
+    for path in paths:
+        url = f"https://vip.ixiliu.cn{path}"
+        try:
+            res = requests.get(url, headers=headers, params=params, timeout=5)
+            status = res.status_code
+            print(f"  测试路径: {path}")
+            print(f"    状态码: {status}")
+            
+            if status == 200:
+                try:
+                    data = res.json()
+                    print(f"    响应数据: {json.dumps(data, ensure_ascii=False)[:200]}")
+                    # 检查是否包含 draw_day_times
+                    if "draw_day_times" in str(data):
+                        print(f"    ✅✅✅ 找到包含 draw_day_times 的路径！")
+                        return path, data
+                except:
+                    print(f"    响应内容: {res.text[:100]}")
+            else:
+                print(f"    响应: {res.text[:50]}")
+            print()
+        except Exception as e:
+            print(f"    请求失败: {e}")
+            print()
+    
+    print("❌ 所有路径都测试完毕，未找到有效接口")
+    return None, None
+
 def get_draw_chance(token):
-    """获取抽奖次数 - 修复URL"""
-    # 修改了URL路径，将 activity.lottery.getUserInfoV2 改为 lottery/getUserInfoV2
+    """获取抽奖次数 - 自动探测路径"""
+    # 先尝试测试所有路径
+    valid_path, test_data = test_draw_api_paths(token)
+    
+    if valid_path:
+        print(f"✅ 找到有效路径: {valid_path}")
+        # 从测试数据中提取 draw_day_times
+        if test_data:
+            data = test_data
+            if data.get("status") == 200:
+                result_data = data.get("data", {})
+                if isinstance(result_data, dict):
+                    if "draw_day_times" in result_data:
+                        return result_data.get("draw_day_times", 0)
+                    if "user" in result_data:
+                        return result_data.get("user", {}).get("draw_day_times", 0)
+        return 0
+    
+    # 如果探测失败，尝试默认路径
+    print("⚠️ 使用默认路径尝试...")
     url = "https://vip.ixiliu.cn/mp/lottery/getUserInfoV2"
     headers = get_headers(token)
     params = {"snId": "468512040523264"}
     
     try:
         res = requests.get(url, headers=headers, params=params)
-        print(f"🔍 抽奖次数接口响应状态码: {res.status_code}")
-        
         if res.status_code == 200:
             data = res.json()
-            print(f"🔍 抽奖次数接口返回: {json.dumps(data, ensure_ascii=False)[:200]}")
-            
             if data.get("status") == 200:
-                # 尝试多种路径获取 draw_day_times
                 result_data = data.get("data", {})
                 if isinstance(result_data, dict):
-                    # 直接在data下
                     if "draw_day_times" in result_data:
                         return result_data.get("draw_day_times", 0)
-                    # 在data.user下
                     if "user" in result_data:
                         return result_data.get("user", {}).get("draw_day_times", 0)
-                return 0
         return 0
-    except Exception as e:
-        print(f"❌ 获取抽奖次数异常: {e}")
+    except:
         return 0
 
 def lottery(token):
-    """抽奖接口 - 修复URL"""
+    """抽奖接口"""
     draw_count = get_draw_chance(token)
+    print(f"🔍 获取到的抽奖次数: {draw_count}")
     
     if draw_count <= 0:
         return "ℹ️ 今日抽奖次数已用完"
     
-    # 修改了URL路径，将 activity.lottery.draw 改为 lottery/draw
     url = "https://vip.ixiliu.cn/mp/lottery/draw"
     headers = get_headers(token)
     params = {"snId": "468512040523264", "channelSn": "0"}
