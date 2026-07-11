@@ -1,4 +1,5 @@
 name: Durex Sign
+
 on:
   workflow_dispatch:
   schedule:
@@ -7,13 +8,22 @@ on:
 jobs:
   sign:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install requests
-      - env:
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run sign.py
+        env:
           DLS: ${{ secrets.DLS }}
-          SCKEY: ${{ secrets.SCKEY }}  # 这里加上了SCKEY声明
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+          PUSHPLUS_TOPIC: ${{ secrets.PUSHPLUS_TOPIC }}
         run: python sign.py
